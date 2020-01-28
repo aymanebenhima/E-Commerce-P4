@@ -3,18 +3,32 @@
  */
 package com.demo.entity;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import com.demo.security.Authority;
+import com.demo.security.UserRole;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * @author AYMANE BENHIMA
  *
  */
 @Entity
-public class User {
+public class User implements UserDetails{
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -29,6 +43,22 @@ public class User {
 	private String email;
 	private String phone;
 	private boolean enabled = true;
+	
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@JsonIgnore
+	private Set<UserRole> userRoles = new HashSet<>();
+	/**
+	 * @return the userRoles
+	 */
+	public Set<UserRole> getUserRoles() {
+		return userRoles;
+	}
+	/**
+	 * @param userRoles the userRoles to set
+	 */
+	public void setUserRoles(Set<UserRole> userRoles) {
+		this.userRoles = userRoles;
+	}
 	/**
 	 * @return the id
 	 */
@@ -113,17 +143,41 @@ public class User {
 	public void setPhone(String phone) {
 		this.phone = phone;
 	}
-	/**
-	 * @return the enabled
-	 */
-	public boolean isEnabled() {
-		return enabled;
-	}
+
 	/**
 	 * @param enabled the enabled to set
 	 */
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+	}
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
+		Set<GrantedAuthority> authorities = new HashSet<>();
+		userRoles.forEach(ur -> authorities.add(new Authority(ur.getRole().getName())));
+		return null;
+	}
+	@Override
+	public boolean isAccountNonExpired() {
+		// TODO Auto-generated method stub
+		return true;
+	}
+	@Override
+	public boolean isAccountNonLocked() {
+		// TODO Auto-generated method stub
+		return true;
+	}
+	@Override
+	public boolean isCredentialsNonExpired() {
+		// TODO Auto-generated method stub
+		return true;
+	}
+	
+	@Override
+	/**
+	 * @return the enabled
+	 */
+	public boolean isEnabled() {
+		return enabled;
 	}
 
 }
